@@ -12,26 +12,9 @@ class Program
 
     public static async Task Main(string[] args)
     {
-        var program1 = PulumiFn.Create(() =>
-        {
-            var fooVpc = new Vpc("FooVPC", new VpcArgs()
-            {
-                CidrBlock = "10.0.0.0/16",
-                EnableDnsHostnames = true,
-                EnableDnsSupport = true
-            });
-            new Tag("FooVPCTag", new TagArgs()
-            {
-                Key = "Name",
-                Value = "FooVPC",
-                ResourceId = fooVpc.Id
-            });
+        var program1 = CreateProgram1();
 
-            return new Dictionary<string, object?>()
-            {
-                ["FooVpcId"] = fooVpc.Id
-            };
-        });
+        var program2 = CreateProgram2();
 
         var destroy = args.Any() && args[0] == "destroy";
         var projectName = "Experiment1";
@@ -64,5 +47,43 @@ class Program
 
             Console.WriteLine($"FooVpcId: {result.Outputs["FooVpcId"].Value}");
         }
+    }
+
+    private static PulumiFn CreateProgram1()
+    {
+        var program1 = PulumiFn.Create(() =>
+        {
+            var fooVpc = new Vpc("FooVPC", new VpcArgs()
+            {
+                CidrBlock = "10.0.0.0/16",
+                EnableDnsHostnames = true,
+                EnableDnsSupport = true
+            });
+            new Tag("FooVPCTag", new TagArgs()
+            {
+                Key = "Name",
+                Value = "FooVPC",
+                ResourceId = fooVpc.Id
+            });
+
+            return new Dictionary<string, object?>()
+            {
+                ["FooVpcId"] = fooVpc.Id
+            };
+        });
+
+        return program1;
+    }
+
+    private static PulumiFn CreateProgram2()
+    {
+        var program2 = PulumiFn.Create(() =>
+        {
+            return new Dictionary<string, object?>()
+            {
+            };
+        });
+
+        return program2;
     }
 }
