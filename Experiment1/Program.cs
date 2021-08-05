@@ -79,6 +79,17 @@ class Program
     {
         var program2 = PulumiFn.Create(() =>
         {
+            //var pInternateGateway = new InternetGateway("p-internet-gateway", new InternetGatewayArgs
+            //{
+            //    VpcId = pVpc.Id,
+            //});
+            //new Tag("InternetGatewayName", new TagArgs
+            //{
+            //    Key = "Name",
+            //    Value = "p-Internet-Gateway",
+            //    ResourceId = pInternateGateway.Id
+            //});
+
             return new Dictionary<string, object?>()
             {
             };
