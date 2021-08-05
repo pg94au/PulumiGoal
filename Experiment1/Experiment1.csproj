@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Pulumi.Automation" Version="3.9.1" />
     <PackageReference Include="Pulumi.Aws" Version="4.*" />
   </ItemGroup>
 

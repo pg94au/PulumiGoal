@@ -10,7 +10,7 @@ class Program
 {
     //    static Task<int> Main() => Deployment.RunAsync<MyStack>();
 
-    public async Task Main(string[] args)
+    public static async Task Main(string[] args)
     {
         var program1 = PulumiFn.Create(() =>
         {
