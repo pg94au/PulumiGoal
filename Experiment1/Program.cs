@@ -14,30 +14,40 @@ class Program
     {
         var program1 = CreateProgram1();
 
-        var program2 = CreateProgram2();
-
         var destroy = args.Any() && args[0] == "destroy";
-        var projectName = "Experiment1";
-        var stackName = "experiment1";
 
-        var stackArgs = new InlineProgramArgs(projectName, stackName, program1);
-        var stack = await LocalWorkspace.CreateOrSelectStackAsync(stackArgs);
+        var stack = await LocalWorkspace.CreateOrSelectStackAsync(
+            new InlineProgramArgs("Experiment1", "experiment1-a", program1)
+            );
 
         await stack.Workspace.InstallPluginAsync("aws", "v4.0.0");
-
         await stack.SetConfigAsync("aws:region", new ConfigValue("ca-central-1"));
-
         await stack.RefreshAsync(new RefreshOptions {OnStandardOutput = Console.WriteLine});
 
         if (destroy)
         {
-            await stack.DestroyAsync(new DestroyOptions {OnStandardOutput = Console.WriteLine});
+            // Destroy the second stack first
+            var outputs = await stack.GetOutputsAsync();
+            var program2 = CreateProgram2(outputs["FooVpcId"].Value as string);
+
+            var stack2 = await LocalWorkspace.CreateOrSelectStackAsync(
+                new InlineProgramArgs("Experiment1", "experiment1-b", program2)
+            );
+
+            await stack2.Workspace.InstallPluginAsync("aws", "v4.0.0");
+            await stack2.SetConfigAsync("aws:region", new ConfigValue("ca-central-1"));
+            await stack2.RefreshAsync(new RefreshOptions { OnStandardOutput = Console.WriteLine });
+
+            await stack2.DestroyAsync(new DestroyOptions {OnStandardOutput = Console.WriteLine});
+
+            // Destroy the first stack second
+            await stack.DestroyAsync(new DestroyOptions { OnStandardOutput = Console.WriteLine });
         }
         else
         {
             var result = await stack.UpAsync(new UpOptions {OnStandardOutput = Console.WriteLine});
 
-            if (result.Summary.ResourceChanges != null)
+            if (result.Summary?.ResourceChanges != null)
             {
                 foreach (var change in result.Summary.ResourceChanges)
                 {
@@ -45,7 +55,28 @@ class Program
                 }
             }
 
-            Console.WriteLine($"FooVpcId: {result.Outputs["FooVpcId"].Value}");
+            var fooVpcId = result.Outputs["FooVpcId"].Value as string;
+            Console.WriteLine($"FooVpcId: {fooVpcId}");
+
+            var program2 = CreateProgram2(fooVpcId);
+
+            var stack2 = await LocalWorkspace.CreateOrSelectStackAsync(
+                new InlineProgramArgs("Experiment1", "experiment1-b", program2)
+                );
+
+            await stack2.Workspace.InstallPluginAsync("aws", "v4.0.0");
+            await stack2.SetConfigAsync("aws:region", new ConfigValue("ca-central-1"));
+            await stack2.RefreshAsync(new RefreshOptions { OnStandardOutput = Console.WriteLine });
+
+            var result2 = await stack2.UpAsync(new UpOptions { OnStandardOutput = Console.WriteLine });
+
+            if (result2.Summary?.ResourceChanges != null)
+            {
+                foreach (var change in result2.Summary.ResourceChanges)
+                {
+                    Console.WriteLine($"{change.Key}: {change.Value}");
+                }
+            }
         }
     }
 
@@ -75,20 +106,20 @@ class Program
         return program1;
     }
 
-    private static PulumiFn CreateProgram2()
+    private static PulumiFn CreateProgram2(string fooVpcId)
     {
         var program2 = PulumiFn.Create(() =>
         {
-            //var pInternateGateway = new InternetGateway("p-internet-gateway", new InternetGatewayArgs
-            //{
-            //    VpcId = pVpc.Id,
-            //});
-            //new Tag("InternetGatewayName", new TagArgs
-            //{
-            //    Key = "Name",
-            //    Value = "p-Internet-Gateway",
-            //    ResourceId = pInternateGateway.Id
-            //});
+            var fooInternateGateway = new InternetGateway("FooInternetGateway", new InternetGatewayArgs
+            {
+                VpcId = fooVpcId
+            });
+            new Tag("FooInternetGatewayTag", new TagArgs
+            {
+                Key = "Name",
+                Value = "FooInternetGateway",
+                ResourceId = fooInternateGateway.Id
+            });
 
             return new Dictionary<string, object?>()
             {

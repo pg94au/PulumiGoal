@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "Experiment1": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "PULUMI_CONFIG_PASSPHRASE": "secret"
+      },
+      "sqlDebugging": true
+    }
+  }
+}
