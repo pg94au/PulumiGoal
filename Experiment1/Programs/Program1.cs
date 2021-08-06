@@ -57,8 +57,145 @@ namespace Experiment1.Programs
                     ResourceId = fooRouteTable.Id
                 });
 
+                var fooSubnet1a = new Subnet("FooSubnet1a", new SubnetArgs
+                {
+                    VpcId = fooVpc.Id,
+                    CidrBlock = "10.0.1.0/24",
+                    AvailabilityZone = "ca-central-1a"
+                });
+                new Tag("FooSubnet1aTag", new TagArgs
+                {
+                    Key = "Name",
+                    Value = "FooSubnet1a",
+                    ResourceId = fooSubnet1a.Id
+                });
 
-                return new Dictionary<string, object?>()
+                var fooSubnet1b = new Subnet("FooSubnet1b", new SubnetArgs
+                {
+                    VpcId = fooVpc.Id,
+                    CidrBlock = "10.0.2.0/24",
+                    AvailabilityZone = "ca-central-1a"
+                });
+                new Tag("FooSubnet1bTag", new TagArgs
+                {
+                    Key = "Name",
+                    Value = "FooSubnet1b",
+                    ResourceId = fooSubnet1b.Id
+                });
+
+                var fooSgAllowSshFromHome = new SecurityGroup("FooSgAllowSshFromHome", new SecurityGroupArgs
+                {
+                    Name = "FooSgAllowSshFromHome",
+                    Description = "Allow SSH from home IP",
+                    VpcId = fooVpc.Id,
+                    Ingress =
+                    {
+                        new SecurityGroupIngressArgs
+                        {
+                            FromPort = 22,
+                            ToPort = 22,
+                            Protocol = "tcp",
+                            CidrBlocks = { "206.248.172.36/32" }
+                        }
+                    }
+                });
+                new Tag("FooSgAllowSshFromHomeTag", new TagArgs
+                {
+                    Key = "Name",
+                    Value = "FooSgAllowSshFromHome",
+                    ResourceId = fooSgAllowSshFromHome.Id
+                });
+
+                var fooSgLoadBalancer = new SecurityGroup("FooSgLoadBalancer", new SecurityGroupArgs
+                {
+                    Name = "FooSgLoadBalancer",
+                    Description = "Security group tailored to the load balancer requirements",
+                    VpcId = fooVpc.Id
+                });
+                new Tag("FooSgLoadBalancerTag", new TagArgs
+                {
+                    Key = "Name",
+                    Value = "FooSgLoadBalancer",
+                    ResourceId = fooSgLoadBalancer.Id
+                });
+
+                var fooSgWebServer = new SecurityGroup("FooSgWebServer", new SecurityGroupArgs
+                {
+                    Name = "FooSgWebServer",
+                    Description = "Security group tailored to the web server requirements",
+                    VpcId = fooVpc.Id
+                });
+                new Tag("FooSgWebServerTag", new TagArgs
+                {
+                    Key = "Name",
+                    Value = "FooSgWebServer",
+                    ResourceId = fooSgWebServer.Id
+                });
+
+                var fooSgRuleLoadBalancerAllowWww = new SecurityGroupRule("FooSgRuleLoadBalancerAllowWww", new SecurityGroupRuleArgs
+                {
+                    Type = "ingress",
+                    Description = "Allow incoming WWW to the load balancer from everywhere",
+                    FromPort = 80,
+                    ToPort = 80,
+                    Protocol = "tcp",
+                    CidrBlocks = { "0.0.0.0/0" },
+                    SecurityGroupId = fooSgLoadBalancer.Id
+                });
+
+                var fooSgRuleWwwToWebServers = new SecurityGroupRule("FooSgRuleWwwToWebServers", new SecurityGroupRuleArgs
+                {
+                    Type = "egress",
+                    Description = "Allow the load balancer to reach internal web servers",
+                    FromPort = 80,
+                    ToPort = 80,
+                    Protocol = "tcp",
+                    SourceSecurityGroupId = fooSgWebServer.Id,
+                    SecurityGroupId = fooSgLoadBalancer.Id
+                });
+
+                var fooSgRuleWwwFromLoadBalancer = new SecurityGroupRule("FooSgRuleWwwFromLoadBalancer", new SecurityGroupRuleArgs
+                {
+                    Type = "ingress",
+                    Description = "Allow the load balancer to reach internal web servers",
+                    FromPort = 80,
+                    ToPort = 80,
+                    Protocol = "tcp",
+                    SourceSecurityGroupId = fooSgLoadBalancer.Id,
+                    SecurityGroupId = fooSgWebServer.Id
+                });
+
+                var fooLaunchTemplate = new LaunchTemplate("FooLaunchTemplateWebServer", new LaunchTemplateArgs
+                {
+                    Name = "FooLaunchTemplateWebServer",
+                    UpdateDefaultVersion = true,
+                    ImageId = "ami-0a09ff033117a19ea",
+                    InstanceType = "t2.nano",
+                    KeyName = "MyKeyPair",
+                    NetworkInterfaces =
+                    {
+                        new LaunchTemplateNetworkInterfaceArgs
+                        {
+                            AssociatePublicIpAddress = "true",
+                            SubnetId = fooSubnet1a.Id,
+                            SecurityGroups =
+                            {
+                                fooSgAllowSshFromHome.Id,
+                                fooSgWebServer.Id
+                            }
+                        }
+                    },
+                    TagSpecifications = new LaunchTemplateTagSpecificationArgs
+                    {
+                        ResourceType = "instance",
+                        Tags = { { "Name", "FooWebServer" } }
+                    }
+                });
+
+
+
+
+                return new Dictionary<string, object?>
                 {
                     ["FooVpcId"] = fooVpc.Id
                 };
