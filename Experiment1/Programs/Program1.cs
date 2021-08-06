@@ -2,7 +2,7 @@
 using Pulumi.Automation;
 using Pulumi.Aws.Ec2;
 
-namespace Experiment1
+namespace Experiment1.Programs
 {
     public class Program1
     {
