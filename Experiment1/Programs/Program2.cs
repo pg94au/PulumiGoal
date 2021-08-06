@@ -1,27 +1,44 @@
 ﻿using System.Collections.Generic;
 using Pulumi.Automation;
 using Pulumi.Aws.Alb;
+using Pulumi.Aws.Alb.Inputs;
 
 namespace Experiment1.Programs
 {
     public class Program2
     {
-        public static PulumiFn Create(string fooVpcId)
+        public static PulumiFn Create(string fooSgLoadBalancerId, string fooSubnet1aId, string fooSubnet1bId, string fooLbTargetGroupArn)
         {
             var program = PulumiFn.Create(() =>
             {
-                var fooLbTargetGroup = new TargetGroup("FooLbTargetGroupWebServer", new TargetGroupArgs
+                var fooLbWebServer = new LoadBalancer("FooLbWebServer", new LoadBalancerArgs
                 {
-                    Name = "FooLbTargetGroupWebServer",
+                    Name = "FooLbWebServer",
+                    Internal = false,
+                    LoadBalancerType = "application",
+                    SecurityGroups = { fooSgLoadBalancerId },
+                    Subnets = { fooSubnet1aId, fooSubnet1bId },
+                    EnableDeletionProtection = false
+                });
+
+                var fooLbListener = new Listener("FooLbWebServerListener", new ListenerArgs
+                {
+                    LoadBalancerArn = fooLbWebServer.Arn,
                     Port = 80,
                     Protocol = "HTTP",
-                    VpcId = fooVpcId,
-                    Tags = { { "Name", "FooLbTargetGroupWebServer" } }
+                    DefaultActions = {
+                        new ListenerDefaultActionArgs
+                        {
+                            Type = "forward",
+                            TargetGroupArn = fooLbTargetGroupArn
+                        }
+                    }
                 });
 
 
                 return new Dictionary<string, object?>()
                 {
+                    ["LoadBalancerDns"] = fooLbWebServer.DnsName
                 };
             });
 

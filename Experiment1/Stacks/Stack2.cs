@@ -7,9 +7,9 @@ namespace Experiment1.Stacks
 {
     public class Stack2
     {
-        public static async Task<WorkspaceStack> PrepareAsync(string fooVpcId)
+        public static async Task<WorkspaceStack> PrepareAsync(string fooSgLoadBalancerId, string fooSubnet1aId, string fooSubnet1bId, string fooLbTargetGroupArn)
         {
-            var program2 = Program2.Create(fooVpcId);
+            var program2 = Program2.Create(fooSgLoadBalancerId, fooSubnet1aId, fooSubnet1bId, fooLbTargetGroupArn);
 
             var stack = await LocalWorkspace.CreateOrSelectStackAsync(
                 new InlineProgramArgs("Experiment1", "experiment1-b", program2)

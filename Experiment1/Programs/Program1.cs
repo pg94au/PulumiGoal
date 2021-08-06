@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using Pulumi.Automation;
+using Pulumi.Aws.Alb;
+using Pulumi.Aws.AutoScaling;
 using Pulumi.Aws.Ec2;
 using Pulumi.Aws.Ec2.Inputs;
 
@@ -26,7 +28,7 @@ namespace Experiment1.Programs
                 });
 
                 // Build the Internet Gateway
-                var fooInternateGateway = new InternetGateway("FooInternetGateway", new InternetGatewayArgs
+                var fooInternetGateway = new InternetGateway("FooInternetGateway", new InternetGatewayArgs
                 {
                     VpcId = fooVpc.Id
                 });
@@ -34,7 +36,7 @@ namespace Experiment1.Programs
                 {
                     Key = "Name",
                     Value = "FooInternetGateway",
-                    ResourceId = fooInternateGateway.Id
+                    ResourceId = fooInternetGateway.Id
                 });
 
                 // Build the Route Table
@@ -46,7 +48,7 @@ namespace Experiment1.Programs
                         new RouteTableRouteArgs
                         {
                             CidrBlock = "0.0.0.0/0",
-                            GatewayId = fooInternateGateway.Id
+                            GatewayId = fooInternetGateway.Id
                         }
                     }
                 });
@@ -74,7 +76,7 @@ namespace Experiment1.Programs
                 {
                     VpcId = fooVpc.Id,
                     CidrBlock = "10.0.2.0/24",
-                    AvailabilityZone = "ca-central-1a"
+                    AvailabilityZone = "ca-central-1b"
                 });
                 new Tag("FooSubnet1bTag", new TagArgs
                 {
@@ -192,12 +194,43 @@ namespace Experiment1.Programs
                     }
                 });
 
+                var fooLbTargetGroup = new TargetGroup("FooLbTargetGroupWebServer", new TargetGroupArgs
+                {
+                    Name = "FooLbTargetGroupWebServer",
+                    Port = 80,
+                    Protocol = "HTTP",
+                    VpcId = fooVpc.Id,
+                    Tags = { { "Name", "FooLbTargetGroupWebServer" } }
+                });
 
+                var fooAutoscalingGroup = new Group("FooAutoScalingGroupWebServer", new GroupArgs
+                {
+                    Name = "FooAutoScalingGroupWebServer",
+                    DesiredCapacity = 2,
+                    MaxSize = 2,
+                    MinSize = 2,
+                    LaunchTemplate = new Pulumi.Aws.AutoScaling.Inputs.GroupLaunchTemplateArgs
+                    {
+                        Id = fooLaunchTemplate.Id,
+                        Version = "$Latest"
+                    },
+                    TargetGroupArns = { fooLbTargetGroup.Arn }
+                });
+                //new Tag("FooAutoScalingGroupWebServerTag", new TagArgs
+                //{
+                //    Key = "Name",
+                //    Value = "FooAutoScalingGroupWebServer",
+                //    ResourceId = fooAutoscalingGroup.Id
+                //});
 
 
                 return new Dictionary<string, object?>
                 {
-                    ["FooVpcId"] = fooVpc.Id
+                    ["FooVpcId"] = fooVpc.Id,
+                    ["FooSgLoadBalancerId"] = fooSgLoadBalancer.Id,
+                    ["FooSubnet1aId"] = fooSubnet1a.Id,
+                    ["FooSubnet1bId"] = fooSubnet1b.Id,
+                    ["FooLbTargetGroupArn"] = fooLbTargetGroup.Arn
                 };
             });
 
