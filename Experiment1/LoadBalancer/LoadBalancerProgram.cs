@@ -3,7 +3,7 @@ using Pulumi.Automation;
 using Pulumi.Aws.Alb;
 using Pulumi.Aws.Alb.Inputs;
 
-namespace Experiment1.Programs
+namespace Experiment1.LoadBalancer
 {
     public class LoadBalancerProgram
     {
@@ -11,7 +11,7 @@ namespace Experiment1.Programs
         {
             var program = PulumiFn.Create(() =>
             {
-                var fooLbWebServer = new LoadBalancer("FooLbWebServer", new LoadBalancerArgs
+                var fooLbWebServer = new Pulumi.Aws.Alb.LoadBalancer("FooLbWebServer", new LoadBalancerArgs
                 {
                     Name = "FooLbWebServer",
                     Internal = false,

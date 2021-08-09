@@ -5,7 +5,7 @@ using Pulumi.Aws.AutoScaling;
 using Pulumi.Aws.Ec2;
 using Pulumi.Aws.Ec2.Inputs;
 
-namespace Experiment1.Programs
+namespace Experiment1.WebApplication
 {
     public class WebApplicationProgram
     {

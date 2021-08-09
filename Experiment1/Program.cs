@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Experiment1.Stacks;
+using Experiment1.LoadBalancer;
+using Experiment1.WebApplication;
 using Pulumi.Automation;
 
 namespace Experiment1

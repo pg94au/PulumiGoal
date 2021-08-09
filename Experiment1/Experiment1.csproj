@@ -11,4 +11,9 @@
     <PackageReference Include="Pulumi.Aws" Version="4.*" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="LoadBalancer\" />
+    <Folder Include="WebApplication\" />
+  </ItemGroup>
+
 </Project>
