@@ -85,6 +85,18 @@ namespace Experiment1.Programs
                     ResourceId = fooSubnet1b.Id
                 });
 
+                var fooSubnet1aRta = new RouteTableAssociation("FooSubnet1aRta", new RouteTableAssociationArgs
+                {
+                    SubnetId = fooSubnet1a.Id,
+                    RouteTableId = fooRouteTable.Id
+                });
+
+                var fooSubnet1bRta = new RouteTableAssociation("FooSubnet1bRta", new RouteTableAssociationArgs
+                {
+                    SubnetId = fooSubnet1b.Id,
+                    RouteTableId = fooRouteTable.Id
+                });
+
                 var fooSgAllowSshFromHome = new SecurityGroup("FooSgAllowSshFromHome", new SecurityGroupArgs
                 {
                     Name = "FooSgAllowSshFromHome",
