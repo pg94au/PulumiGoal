@@ -5,7 +5,7 @@ using Pulumi.Aws.Alb.Inputs;
 
 namespace Experiment1.Programs
 {
-    public class Program2
+    public class LoadBalancerProgram
     {
         public static PulumiFn Create(string fooSgLoadBalancerId, string fooSubnet1aId, string fooSubnet1bId, string fooLbTargetGroupArn)
         {

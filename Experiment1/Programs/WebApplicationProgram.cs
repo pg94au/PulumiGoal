@@ -7,7 +7,7 @@ using Pulumi.Aws.Ec2.Inputs;
 
 namespace Experiment1.Programs
 {
-    public class Program1
+    public class WebApplicationProgram
     {
         public static PulumiFn Create()
         {

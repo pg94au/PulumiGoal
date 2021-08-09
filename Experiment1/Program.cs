@@ -25,45 +25,45 @@ namespace Experiment1
         private static async Task Destroy()
         {
             // We destroy stacks in the reverse order in which they were brought up...
-            var stack1 = await Stack1.PrepareAsync();
+            var webApplicationStack = await WebApplicationStack.PrepareAsync();
 
             // Destroy the second stack first
-            var outputs = await stack1.GetOutputsAsync();
+            var outputs = await webApplicationStack.GetOutputsAsync();
 
             var fooSgLoadBalancerId = (string)outputs["FooSgLoadBalancerId"].Value;
             var fooSubnet1aId = (string)outputs["FooSubnet1aId"].Value;
             var fooSubnet1bId = (string)outputs["FooSubnet1bId"].Value;
             var fooLbTargetGroupArn = (string)outputs["FooLbTargetGroupArn"].Value;
 
-            var stack2 = await Stack2.PrepareAsync(fooSgLoadBalancerId, fooSubnet1aId, fooSubnet1bId, fooLbTargetGroupArn);
+            var loadBalancerStack = await LoadBalancerStack.PrepareAsync(fooSgLoadBalancerId, fooSubnet1aId, fooSubnet1bId, fooLbTargetGroupArn);
 
-            await stack2.DestroyAsync(new DestroyOptions { OnStandardOutput = Console.WriteLine });
+            await loadBalancerStack.DestroyAsync(new DestroyOptions { OnStandardOutput = Console.WriteLine });
 
             // Destroy the first stack second
-            await stack1.DestroyAsync(new DestroyOptions { OnStandardOutput = Console.WriteLine });
+            await webApplicationStack.DestroyAsync(new DestroyOptions { OnStandardOutput = Console.WriteLine });
         }
 
         private static async Task Up()
         {
-            var stack1 = await Stack1.PrepareAsync();
+            var webApplicationStack = await WebApplicationStack.PrepareAsync();
 
-            var result = await stack1.UpAsync(new UpOptions { OnStandardOutput = Console.WriteLine });
+            var webApplicationResult = await webApplicationStack.UpAsync(new UpOptions { OnStandardOutput = Console.WriteLine });
 
-            ReportOnUpdateSummary(result.Summary);
+            ReportOnUpdateSummary(webApplicationResult.Summary);
 
-            var fooVpcId = (string)result.Outputs["FooVpcId"].Value;
-            var fooSgLoadBalancerId = (string)result.Outputs["FooSgLoadBalancerId"].Value;
-            var fooSubnet1aId = (string)result.Outputs["FooSubnet1aId"].Value;
-            var fooSubnet1bId = (string)result.Outputs["FooSubnet1bId"].Value;
-            var fooLbTargetGroupArn = (string)result.Outputs["FooLbTargetGroupArn"].Value;
+            var fooVpcId = (string)webApplicationResult.Outputs["FooVpcId"].Value;
+            var fooSgLoadBalancerId = (string)webApplicationResult.Outputs["FooSgLoadBalancerId"].Value;
+            var fooSubnet1aId = (string)webApplicationResult.Outputs["FooSubnet1aId"].Value;
+            var fooSubnet1bId = (string)webApplicationResult.Outputs["FooSubnet1bId"].Value;
+            var fooLbTargetGroupArn = (string)webApplicationResult.Outputs["FooLbTargetGroupArn"].Value;
 
-            var stack2 = await Stack2.PrepareAsync(fooSgLoadBalancerId, fooSubnet1aId, fooSubnet1bId, fooLbTargetGroupArn);
+            var loadBalancerStack = await LoadBalancerStack.PrepareAsync(fooSgLoadBalancerId, fooSubnet1aId, fooSubnet1bId, fooLbTargetGroupArn);
 
-            var result2 = await stack2.UpAsync(new UpOptions { OnStandardOutput = Console.WriteLine });
+            var loadBalancerResult = await loadBalancerStack.UpAsync(new UpOptions { OnStandardOutput = Console.WriteLine });
 
-            ReportOnUpdateSummary(result2.Summary);
+            ReportOnUpdateSummary(loadBalancerResult.Summary);
 
-            var loadBalancerDns = result2.Outputs["LoadBalancerDns"].Value;
+            var loadBalancerDns = loadBalancerResult.Outputs["LoadBalancerDns"].Value;
 
             Console.WriteLine($"LoadBalancerDns: {loadBalancerDns}");
         }

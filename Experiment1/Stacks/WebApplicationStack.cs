@@ -5,14 +5,14 @@ using Pulumi.Automation;
 
 namespace Experiment1.Stacks
 {
-    public class Stack2
+    public class WebApplicationStack
     {
-        public static async Task<WorkspaceStack> PrepareAsync(string fooSgLoadBalancerId, string fooSubnet1aId, string fooSubnet1bId, string fooLbTargetGroupArn)
+        public static async Task<WorkspaceStack> PrepareAsync()
         {
-            var program2 = Program2.Create(fooSgLoadBalancerId, fooSubnet1aId, fooSubnet1bId, fooLbTargetGroupArn);
+            var program1 = WebApplicationProgram.Create();
 
             var stack = await LocalWorkspace.CreateOrSelectStackAsync(
-                new InlineProgramArgs("Experiment1", "experiment1-b", program2)
+                new InlineProgramArgs("Experiment1", "experiment1-a", program1)
             );
 
             await stack.Workspace.InstallPluginAsync("aws", "v4.0.0");
