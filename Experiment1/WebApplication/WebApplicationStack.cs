@@ -6,15 +6,15 @@ namespace Experiment1.WebApplication
 {
     public class WebApplicationStack
     {
-        public static async Task<WorkspaceStack> PrepareAsync()
+        public static async Task<WorkspaceStack> PrepareAsync(string fooVpcId, string fooSubnet1aId, string fooSgLoadBalancerId, string fooLbTargetGroupArn)
         {
-            var program1 = WebApplicationProgram.Create();
+            var program1 = WebApplicationProgram.Create(fooVpcId, fooSubnet1aId, fooSgLoadBalancerId, fooLbTargetGroupArn);
 
             var stack = await LocalWorkspace.CreateOrSelectStackAsync(
-                new InlineProgramArgs("Experiment1", "experiment1-a", program1)
+                new InlineProgramArgs("Experiment1", "experiment1-webApplication", program1)
             );
 
-            await stack.Workspace.InstallPluginAsync("aws", "v4.0.0");
+            await stack.Workspace.InstallPluginAsync("aws", "v4.15.0");
             await stack.SetConfigAsync("aws:region", new ConfigValue("ca-central-1"));
             await stack.RefreshAsync(new RefreshOptions { OnStandardOutput = Console.WriteLine });
 

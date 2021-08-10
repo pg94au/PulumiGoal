@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using Pulumi.Automation;
-using Pulumi.Aws.Alb;
 using Pulumi.Aws.AutoScaling;
 using Pulumi.Aws.Ec2;
 using Pulumi.Aws.Ec2.Inputs;
@@ -9,99 +9,15 @@ namespace Experiment1.WebApplication
 {
     public class WebApplicationProgram
     {
-        public static PulumiFn Create()
+        public static PulumiFn Create(string fooVpcId, string fooSubnet1aId, string fooSgLoadBalancerId, string fooLbTargetGroupArn)
         {
             var program = PulumiFn.Create(() =>
             {
-                // Build the VPC
-                var fooVpc = new Vpc("FooVPC", new VpcArgs()
-                {
-                    CidrBlock = "10.0.0.0/16",
-                    EnableDnsHostnames = true,
-                    EnableDnsSupport = true
-                });
-                new Tag("FooVPCTag", new TagArgs()
-                {
-                    Key = "Name",
-                    Value = "FooVPC",
-                    ResourceId = fooVpc.Id
-                });
-
-                // Build the Internet Gateway
-                var fooInternetGateway = new InternetGateway("FooInternetGateway", new InternetGatewayArgs
-                {
-                    VpcId = fooVpc.Id
-                });
-                new Tag("FooInternetGatewayTag", new TagArgs
-                {
-                    Key = "Name",
-                    Value = "FooInternetGateway",
-                    ResourceId = fooInternetGateway.Id
-                });
-
-                // Build the Route Table
-                var fooRouteTable = new RouteTable("FooRouteTable", new RouteTableArgs
-                {
-                    VpcId = fooVpc.Id,
-                    Routes =
-                    {
-                        new RouteTableRouteArgs
-                        {
-                            CidrBlock = "0.0.0.0/0",
-                            GatewayId = fooInternetGateway.Id
-                        }
-                    }
-                });
-                new Tag("FooRouteTableTag", new TagArgs
-                {
-                    Key = "Name",
-                    Value = "FooRouteTable",
-                    ResourceId = fooRouteTable.Id
-                });
-
-                var fooSubnet1a = new Subnet("FooSubnet1a", new SubnetArgs
-                {
-                    VpcId = fooVpc.Id,
-                    CidrBlock = "10.0.1.0/24",
-                    AvailabilityZone = "ca-central-1a"
-                });
-                new Tag("FooSubnet1aTag", new TagArgs
-                {
-                    Key = "Name",
-                    Value = "FooSubnet1a",
-                    ResourceId = fooSubnet1a.Id
-                });
-
-                var fooSubnet1b = new Subnet("FooSubnet1b", new SubnetArgs
-                {
-                    VpcId = fooVpc.Id,
-                    CidrBlock = "10.0.2.0/24",
-                    AvailabilityZone = "ca-central-1b"
-                });
-                new Tag("FooSubnet1bTag", new TagArgs
-                {
-                    Key = "Name",
-                    Value = "FooSubnet1b",
-                    ResourceId = fooSubnet1b.Id
-                });
-
-                var fooSubnet1aRta = new RouteTableAssociation("FooSubnet1aRta", new RouteTableAssociationArgs
-                {
-                    SubnetId = fooSubnet1a.Id,
-                    RouteTableId = fooRouteTable.Id
-                });
-
-                var fooSubnet1bRta = new RouteTableAssociation("FooSubnet1bRta", new RouteTableAssociationArgs
-                {
-                    SubnetId = fooSubnet1b.Id,
-                    RouteTableId = fooRouteTable.Id
-                });
-
                 var fooSgAllowSshFromHome = new SecurityGroup("FooSgAllowSshFromHome", new SecurityGroupArgs
                 {
                     Name = "FooSgAllowSshFromHome",
                     Description = "Allow SSH from home IP",
-                    VpcId = fooVpc.Id,
+                    VpcId = fooVpcId,
                     Ingress =
                     {
                         new SecurityGroupIngressArgs
@@ -120,24 +36,12 @@ namespace Experiment1.WebApplication
                     ResourceId = fooSgAllowSshFromHome.Id
                 });
 
-                var fooSgLoadBalancer = new SecurityGroup("FooSgLoadBalancer", new SecurityGroupArgs
-                {
-                    Name = "FooSgLoadBalancer",
-                    Description = "Security group tailored to the load balancer requirements",
-                    VpcId = fooVpc.Id
-                });
-                new Tag("FooSgLoadBalancerTag", new TagArgs
-                {
-                    Key = "Name",
-                    Value = "FooSgLoadBalancer",
-                    ResourceId = fooSgLoadBalancer.Id
-                });
 
                 var fooSgWebServer = new SecurityGroup("FooSgWebServer", new SecurityGroupArgs
                 {
                     Name = "FooSgWebServer",
                     Description = "Security group tailored to the web server requirements",
-                    VpcId = fooVpc.Id
+                    VpcId = fooVpcId
                 });
                 new Tag("FooSgWebServerTag", new TagArgs
                 {
@@ -154,7 +58,7 @@ namespace Experiment1.WebApplication
                     ToPort = 80,
                     Protocol = "tcp",
                     CidrBlocks = { "0.0.0.0/0" },
-                    SecurityGroupId = fooSgLoadBalancer.Id
+                    SecurityGroupId = fooSgLoadBalancerId
                 });
 
                 var fooSgRuleWwwToWebServers = new SecurityGroupRule("FooSgRuleWwwToWebServers", new SecurityGroupRuleArgs
@@ -165,7 +69,7 @@ namespace Experiment1.WebApplication
                     ToPort = 80,
                     Protocol = "tcp",
                     SourceSecurityGroupId = fooSgWebServer.Id,
-                    SecurityGroupId = fooSgLoadBalancer.Id
+                    SecurityGroupId = fooSgLoadBalancerId
                 });
 
                 var fooSgRuleWwwFromLoadBalancer = new SecurityGroupRule("FooSgRuleWwwFromLoadBalancer", new SecurityGroupRuleArgs
@@ -175,7 +79,7 @@ namespace Experiment1.WebApplication
                     FromPort = 80,
                     ToPort = 80,
                     Protocol = "tcp",
-                    SourceSecurityGroupId = fooSgLoadBalancer.Id,
+                    SourceSecurityGroupId = fooSgLoadBalancerId,
                     SecurityGroupId = fooSgWebServer.Id
                 });
 
@@ -184,6 +88,7 @@ namespace Experiment1.WebApplication
                     Name = "FooLaunchTemplateWebServer",
                     UpdateDefaultVersion = true,
                     ImageId = "ami-0a09ff033117a19ea",
+                    //ImageId = "ami-0a91af017a93f5740",
                     InstanceType = "t2.nano",
                     KeyName = "MyKeyPair",
                     NetworkInterfaces =
@@ -191,7 +96,7 @@ namespace Experiment1.WebApplication
                         new LaunchTemplateNetworkInterfaceArgs
                         {
                             AssociatePublicIpAddress = "true",
-                            SubnetId = fooSubnet1a.Id,
+                            SubnetId = fooSubnet1aId, // TODO: Should this  be specified here?
                             SecurityGroups =
                             {
                                 fooSgAllowSshFromHome.Id,
@@ -206,17 +111,12 @@ namespace Experiment1.WebApplication
                     }
                 });
 
-                var fooLbTargetGroup = new TargetGroup("FooLbTargetGroupWebServer", new TargetGroupArgs
-                {
-                    Name = "FooLbTargetGroupWebServer",
-                    Port = 80,
-                    Protocol = "HTTP",
-                    VpcId = fooVpc.Id,
-                    Tags = { { "Name", "FooLbTargetGroupWebServer" } }
-                });
+
 
                 var fooAutoscalingGroup = new Group("FooAutoScalingGroupWebServer", new GroupArgs
                 {
+                    //AvailabilityZones = { "ca-central-1a", "ca-central-1b" }, // TODO: This should be an output from the infrastructure stack
+                    AvailabilityZones = { "ca-central-1a" }, // TODO: This should be an output from the infrastructure stack
                     Name = "FooAutoScalingGroupWebServer",
                     DesiredCapacity = 2,
                     MaxSize = 2,
@@ -226,7 +126,7 @@ namespace Experiment1.WebApplication
                         Id = fooLaunchTemplate.Id,
                         Version = "$Latest"
                     },
-                    TargetGroupArns = { fooLbTargetGroup.Arn }
+                    TargetGroupArns = { fooLbTargetGroupArn },
                 });
                 //new Tag("FooAutoScalingGroupWebServerTag", new TagArgs
                 //{
@@ -236,17 +136,25 @@ namespace Experiment1.WebApplication
                 //});
 
 
-                return new Dictionary<string, object?>
-                {
-                    ["FooVpcId"] = fooVpc.Id,
-                    ["FooSgLoadBalancerId"] = fooSgLoadBalancer.Id,
-                    ["FooSubnet1aId"] = fooSubnet1a.Id,
-                    ["FooSubnet1bId"] = fooSubnet1b.Id,
-                    ["FooLbTargetGroupArn"] = fooLbTargetGroup.Arn
-                };
+                return WebApplicationOutputs.ToDictionary();
             });
 
             return program;
+        }
+    }
+
+    public class WebApplicationOutputs
+    {
+        public WebApplicationOutputs(IImmutableDictionary<string, OutputValue> outputs)
+        {
+        }
+
+        public static IDictionary<string, object?> ToDictionary(
+            )
+        {
+            return new Dictionary<string, object?>
+            {
+            };
         }
     }
 }

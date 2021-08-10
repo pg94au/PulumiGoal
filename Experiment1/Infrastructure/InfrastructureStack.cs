@@ -2,16 +2,16 @@
 using System.Threading.Tasks;
 using Pulumi.Automation;
 
-namespace Experiment1.LoadBalancer
+namespace Experiment1.Infrastructure
 {
-    public class LoadBalancerStack
+    public class InfrastructureStack
     {
-        public static async Task<WorkspaceStack> PrepareAsync(string fooSgLoadBalancerId, string fooSubnet1aId, string fooSubnet1bId, string fooLbTargetGroupArn, bool inService)
+        public static async Task<WorkspaceStack> PrepareAsync()
         {
-            var program2 = LoadBalancerProgram.Create(fooSgLoadBalancerId, fooSubnet1aId, fooSubnet1bId, fooLbTargetGroupArn, inService);
+            var program = InfrastructureProgram.Create();
 
             var stack = await LocalWorkspace.CreateOrSelectStackAsync(
-                new InlineProgramArgs("Experiment1", "experiment1-loadBalancer", program2)
+                new InlineProgramArgs("Experiment1", "experiment1-infrastructure", program)
             );
 
             await stack.Workspace.InstallPluginAsync("aws", "v4.15.0");
