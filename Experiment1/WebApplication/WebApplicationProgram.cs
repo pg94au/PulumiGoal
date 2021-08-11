@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Collections.Immutable;
-using Pulumi.Automation;
+﻿using Pulumi.Automation;
 using Pulumi.Aws.AutoScaling;
 using Pulumi.Aws.Ec2;
 using Pulumi.Aws.Ec2.Inputs;
@@ -111,21 +109,6 @@ namespace Experiment1.WebApplication
             });
 
             return program;
-        }
-    }
-
-    public class WebApplicationOutputs
-    {
-        public WebApplicationOutputs(IImmutableDictionary<string, OutputValue> outputs)
-        {
-        }
-
-        public static IDictionary<string, object?> ToDictionary(
-            )
-        {
-            return new Dictionary<string, object?>
-            {
-            };
         }
     }
 }

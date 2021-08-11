@@ -13,7 +13,6 @@
 
   <ItemGroup>
     <Folder Include="LoadBalancer\" />
-    <Folder Include="WebApplication\" />
   </ItemGroup>
 
 </Project>
