@@ -9,7 +9,7 @@ namespace Experiment1.WebApplication
 {
     public class WebApplicationProgram
     {
-        public static PulumiFn Create(string fooVpcId, string fooSubnet1aId, string fooSgLoadBalancerId, string fooLbTargetGroupArn)
+        public static PulumiFn Create(string fooVpcId, string fooSubnet1aId, string fooSubnet1bId, string fooSgLoadBalancerId, string fooLbTargetGroupArn)
         {
             var program = PulumiFn.Create(() =>
             {
@@ -27,13 +27,8 @@ namespace Experiment1.WebApplication
                             Protocol = "tcp",
                             CidrBlocks = { "206.248.172.36/32" }
                         }
-                    }
-                });
-                new Tag("FooSgAllowSshFromHomeTag", new TagArgs
-                {
-                    Key = "Name",
-                    Value = "FooSgAllowSshFromHome",
-                    ResourceId = fooSgAllowSshFromHome.Id
+                    },
+                    Tags = { { "Name", "FooSgAllowSshFromHome" } }
                 });
 
 
@@ -41,13 +36,8 @@ namespace Experiment1.WebApplication
                 {
                     Name = "FooSgWebServer",
                     Description = "Security group tailored to the web server requirements",
-                    VpcId = fooVpcId
-                });
-                new Tag("FooSgWebServerTag", new TagArgs
-                {
-                    Key = "Name",
-                    Value = "FooSgWebServer",
-                    ResourceId = fooSgWebServer.Id
+                    VpcId = fooVpcId,
+                    Tags = { { "Name", "FooSgWebServer" }}
                 });
 
                 var fooSgRuleLoadBalancerAllowWww = new SecurityGroupRule("FooSgRuleLoadBalancerAllowWww", new SecurityGroupRuleArgs
@@ -91,32 +81,18 @@ namespace Experiment1.WebApplication
                     //ImageId = "ami-0a91af017a93f5740",
                     InstanceType = "t2.nano",
                     KeyName = "MyKeyPair",
-                    NetworkInterfaces =
-                    {
-                        new LaunchTemplateNetworkInterfaceArgs
-                        {
-                            AssociatePublicIpAddress = "true",
-                            SubnetId = fooSubnet1aId, // TODO: Should this  be specified here?
-                            SecurityGroups =
-                            {
-                                fooSgAllowSshFromHome.Id,
-                                fooSgWebServer.Id
-                            }
-                        }
-                    },
+                    VpcSecurityGroupIds = { fooSgAllowSshFromHome.Id, fooSgWebServer.Id },
                     TagSpecifications = new LaunchTemplateTagSpecificationArgs
                     {
                         ResourceType = "instance",
                         Tags = { { "Name", "FooWebServer" } }
-                    }
+                    },
+                    Tags = { { "Name", "FooLaunchTemplateWebServer" } },
+                    
                 });
-
-
 
                 var fooAutoscalingGroup = new Group("FooAutoScalingGroupWebServer", new GroupArgs
                 {
-                    //AvailabilityZones = { "ca-central-1a", "ca-central-1b" }, // TODO: This should be an output from the infrastructure stack
-                    AvailabilityZones = { "ca-central-1a" }, // TODO: This should be an output from the infrastructure stack
                     Name = "FooAutoScalingGroupWebServer",
                     DesiredCapacity = 2,
                     MaxSize = 2,
@@ -126,14 +102,9 @@ namespace Experiment1.WebApplication
                         Id = fooLaunchTemplate.Id,
                         Version = "$Latest"
                     },
+                    VpcZoneIdentifiers = { { fooSubnet1aId, fooSubnet1bId }},
                     TargetGroupArns = { fooLbTargetGroupArn },
                 });
-                //new Tag("FooAutoScalingGroupWebServerTag", new TagArgs
-                //{
-                //    Key = "Name",
-                //    Value = "FooAutoScalingGroupWebServer",
-                //    ResourceId = fooAutoscalingGroup.Id
-                //});
 
 
                 return WebApplicationOutputs.ToDictionary();

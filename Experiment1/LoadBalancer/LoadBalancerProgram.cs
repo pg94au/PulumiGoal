@@ -4,7 +4,6 @@ using Pulumi;
 using Pulumi.Automation;
 using Pulumi.Aws.Alb;
 using Pulumi.Aws.Alb.Inputs;
-using Pulumi.Aws.Lex.Outputs;
 
 namespace Experiment1.LoadBalancer
 {
@@ -21,7 +20,8 @@ namespace Experiment1.LoadBalancer
                     LoadBalancerType = "application",
                     SecurityGroups = { fooSgLoadBalancerId },
                     Subnets = { fooSubnet1aId, fooSubnet1bId },
-                    EnableDeletionProtection = false
+                    EnableDeletionProtection = false,
+                    Tags = { { "Name", "FooLbWebServer" } }
                 });
 
                 var fooLbListener = new Listener("FooLbWebServerListener", new ListenerArgs
@@ -46,7 +46,8 @@ namespace Experiment1.LoadBalancer
                                     MessageBody = "Upgrade in progress..."
                                 }
                             },
-                    }
+                    },
+                    Tags = { { "Name", "FooLbWebServerListener" } }
                 });
 
                 return LoadBalancerOutputs.ToDictionary(Output.Create(true), fooLbWebServer.DnsName);

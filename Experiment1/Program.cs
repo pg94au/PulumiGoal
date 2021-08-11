@@ -116,6 +116,8 @@ namespace Experiment1
             var webApplicationResult = await webApplicationStack.UpAsync(new UpOptions { OnStandardError = Console.Error.WriteLine, OnStandardOutput = Console.WriteLine });
             ReportOnUpdateSummary(webApplicationResult.Summary);
 
+            // TODO: Do we need to wait until all of our instances are actually up and ready before we can set the load balancer back?
+
             Prompt("UPGRADE OF WEB APPLICATION IS COMPLETE, WE NEED TO SET THE LOAD BALANCER BACK");
             using var loadBalancerStack = await PrepareLoadBalancerStackAsync(infrastructureStack, true);
 
@@ -136,6 +138,7 @@ namespace Experiment1
             var webApplicationStack = await WebApplicationStack.PrepareAsync(
                 infrastructureOutputs.VpcId,
                 infrastructureOutputs.Subnet1aId,
+                infrastructureOutputs.Subnet1bId,
                 infrastructureOutputs.LoadBalancerId,
                 infrastructureOutputs.LoadBalancerTargetGroupArn
                 );

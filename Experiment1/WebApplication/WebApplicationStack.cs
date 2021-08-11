@@ -6,9 +6,9 @@ namespace Experiment1.WebApplication
 {
     public class WebApplicationStack
     {
-        public static async Task<WorkspaceStack> PrepareAsync(string fooVpcId, string fooSubnet1aId, string fooSgLoadBalancerId, string fooLbTargetGroupArn)
+        public static async Task<WorkspaceStack> PrepareAsync(string fooVpcId, string fooSubnet1aId, string fooSubnet1bId, string fooSgLoadBalancerId, string fooLbTargetGroupArn)
         {
-            var program1 = WebApplicationProgram.Create(fooVpcId, fooSubnet1aId, fooSgLoadBalancerId, fooLbTargetGroupArn);
+            var program1 = WebApplicationProgram.Create(fooVpcId, fooSubnet1aId, fooSubnet1bId, fooSgLoadBalancerId, fooLbTargetGroupArn);
 
             var stack = await LocalWorkspace.CreateOrSelectStackAsync(
                 new InlineProgramArgs("Experiment1", "experiment1-webApplication", program1)
