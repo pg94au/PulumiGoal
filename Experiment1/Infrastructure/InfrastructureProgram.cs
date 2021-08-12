@@ -12,65 +12,19 @@ namespace Experiment1.Infrastructure
             var program = PulumiFn.Create(() =>
             {
                 // Build the VPC
-                var fooVpc = new Vpc("FooVPC", new VpcArgs()
-                {
-                    CidrBlock = "10.0.0.0/16",
-                    EnableDnsHostnames = true,
-                    EnableDnsSupport = true,
-                    Tags = { { "Name", "FooVPC" } }
-                });
+                var fooVpc = CreateVpc("FooVpc", "10.0.0.0/16");
 
                 // Build the Internet Gateway
-                var fooInternetGateway = new InternetGateway("FooInternetGateway", new InternetGatewayArgs
-                {
-                    VpcId = fooVpc.Id,
-                    Tags = { { "Name", "FooInternetGateway" } }
-                });
+                var fooInternetGateway = CreateInternetGateway("FooInternetGateway", fooVpc);
 
                 // Build the Route Table
-                var fooRouteTable = new RouteTable("FooRouteTable", new RouteTableArgs
-                {
-                    VpcId = fooVpc.Id,
-                    Routes =
-                    {
-                        new RouteTableRouteArgs
-                        {
-                            CidrBlock = "0.0.0.0/0",
-                            GatewayId = fooInternetGateway.Id
-                        }
-                    },
-                    Tags = { { "Name", "FooRouteTable" }}
-                });
+                var fooRouteTable = CreateRouteTable("FooRouteTable", fooVpc, fooInternetGateway);
 
-                var fooSubnet1a = new Subnet("FooSubnet1a", new SubnetArgs
-                {
-                    VpcId = fooVpc.Id,
-                    CidrBlock = "10.0.1.0/24",
-                    AvailabilityZone = "ca-central-1a",
-                    Tags = { { "Name", "FooSubnet1a" } }
-                });
+                // Build the Subnets
+                var fooSubnet1a = CreateSubnet("FooSubnet1a", "10.0.1.0/24", "ca-central-1a", fooVpc, fooRouteTable);
+                var fooSubnet1b = CreateSubnet("FooSubnet1b", "10.0.2.0/24", "ca-central-1b", fooVpc, fooRouteTable);
 
-                var fooSubnet1b = new Subnet("FooSubnet1b", new SubnetArgs
-                {
-                    VpcId = fooVpc.Id,
-                    CidrBlock = "10.0.2.0/24",
-                    AvailabilityZone = "ca-central-1b",
-                    Tags = { { "Name", "FooSubnet1b" } },
-                });
-
-                var fooSubnet1aRta = new RouteTableAssociation("FooSubnet1aRta", new RouteTableAssociationArgs
-                {
-                    SubnetId = fooSubnet1a.Id,
-                    RouteTableId = fooRouteTable.Id,
-                });
-
-                var fooSubnet1bRta = new RouteTableAssociation("FooSubnet1bRta", new RouteTableAssociationArgs
-                {
-                    SubnetId = fooSubnet1b.Id,
-                    RouteTableId = fooRouteTable.Id
-                });
-
-
+                // TODO: This could be extracted also...
                 var fooSgLoadBalancer = new SecurityGroup("FooSgLoadBalancer", new SecurityGroupArgs
                 {
                     Name = "FooSgLoadBalancer",
@@ -94,6 +48,68 @@ namespace Experiment1.Infrastructure
             });
 
             return program;
+        }
+
+        private static Vpc CreateVpc(string name, string cidrBlock)
+        {
+            var fooVpc = new Vpc(name, new VpcArgs()
+            {
+                CidrBlock = cidrBlock,
+                EnableDnsHostnames = true,
+                EnableDnsSupport = true,
+                Tags = { { "Name", name } }
+            });
+
+            return fooVpc;
+        }
+
+        private static InternetGateway CreateInternetGateway(string name, Vpc fooVpc)
+        {
+            var fooInternetGateway = new InternetGateway(name, new InternetGatewayArgs
+            {
+                VpcId = fooVpc.Id,
+                Tags = { { "Name", name } }
+            });
+
+            return fooInternetGateway;
+        }
+
+        private static RouteTable CreateRouteTable(string name, Vpc fooVpc, InternetGateway fooInternetGateway)
+        {
+            var fooRouteTable = new RouteTable(name, new RouteTableArgs
+            {
+                VpcId = fooVpc.Id,
+                Routes =
+                {
+                    new RouteTableRouteArgs
+                    {
+                        CidrBlock = "0.0.0.0/0",
+                        GatewayId = fooInternetGateway.Id
+                    }
+                },
+                Tags = { { "Name", name } }
+            });
+
+            return fooRouteTable;
+        }
+
+        private static Subnet CreateSubnet(string name, string cidrBlock, string availabilityZone, Vpc vpc, RouteTable routeTable)
+        {
+            var subnet = new Subnet(name, new SubnetArgs
+            {
+                VpcId = vpc.Id,
+                CidrBlock = cidrBlock,
+                AvailabilityZone = availabilityZone,
+                Tags = { { "Name", name } }
+            });
+
+            var routeTableAssociation = new RouteTableAssociation($"{name}Rta", new RouteTableAssociationArgs
+            {
+                SubnetId = subnet.Id,
+                RouteTableId = routeTable.Id,
+            });
+
+            return subnet;
         }
     }
 }
