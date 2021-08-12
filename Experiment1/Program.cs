@@ -29,7 +29,7 @@ namespace Experiment1
         {
             // Prepare our stacks
             var infrastructureStack = await InfrastructureStack.PrepareAsync();
-            var webApplicationStack = await PrepareWebApplicationStackAsync(infrastructureStack);
+            var webApplicationStack = await PrepareWebApplicationStackAsync(infrastructureStack, true);
             var loadBalancerStack = await PrepareLoadBalancerStackAsync(infrastructureStack, true);
 
             // We destroy stacks in the reverse order in which they were brought up...
@@ -73,7 +73,7 @@ namespace Experiment1
             ReportOnUpdateSummary(infrastructureResult.Summary);
 
             Prompt("DEPLOYING WEB APPLICATION");
-            var webApplicationStack = await PrepareWebApplicationStackAsync(infrastructureStack);
+            var webApplicationStack = await PrepareWebApplicationStackAsync(infrastructureStack, true);
             var webApplicationResult = await webApplicationStack.UpAsync(new UpOptions { OnStandardOutput = Console.WriteLine });
             ReportOnUpdateSummary(webApplicationResult.Summary);
 
@@ -98,23 +98,27 @@ namespace Experiment1
             var infrastructureResult = await infrastructureStack.UpAsync(new UpOptions { OnStandardError = Console.Error.WriteLine, OnStandardOutput = Console.WriteLine });
             ReportOnUpdateSummary(infrastructureResult.Summary);
 
-            using var webApplicationStack = await PrepareWebApplicationStackAsync(infrastructureStack);
-
             Prompt("UPGRADING EXISTING DEPLOYMENT, WE NEED TO DIVERT THE LOAD BALANCER HERE BEFORE WE START");
 
             using var divertedLoadBalancerStack = await PrepareLoadBalancerStackAsync(infrastructureStack, false);
             var divertedLoadBalancerStackResult = await divertedLoadBalancerStack.UpAsync(new UpOptions { OnStandardError = Console.Error.WriteLine, OnStandardOutput = Console.WriteLine });
             ReportOnUpdateSummary(divertedLoadBalancerStackResult.Summary);
 
-            Prompt("DESTROYING EXISTING WEB APPLICATION NOW (NOTHING CAN RUN WHILE DATABASE UPDATES)");
-            var webApplicationDestroyResult = await webApplicationStack.DestroyAsync(new DestroyOptions { OnStandardError = Console.Error.WriteLine, OnStandardOutput = Console.WriteLine });
-            ReportOnUpdateSummary(webApplicationDestroyResult.Summary);
+            Prompt("SCALING DOWN EXISTING WEB APPLICATION NOW (NOTHING CAN RUN WHILE DATABASE UPDATES)");
+            using (var webApplicationDownStack = await PrepareWebApplicationStackAsync(infrastructureStack, false))
+            {
+                var webApplicationDownResult = await webApplicationDownStack.UpAsync(new UpOptions { OnStandardError = Console.Error.WriteLine, OnStandardOutput = Console.WriteLine });
+                ReportOnUpdateSummary(webApplicationDownResult.Summary);
+            }
 
             Prompt("HERE WE CAN RUN DATABASE MIGRATIONS BECAUSE OUR APPLICATION IS GONE");
 
             Prompt("NOW THAT THE DATABASE IS MIGRATED, WE CAN BRING THE APPLICATION STACK UP AGAIN");
-            var webApplicationResult = await webApplicationStack.UpAsync(new UpOptions { OnStandardError = Console.Error.WriteLine, OnStandardOutput = Console.WriteLine });
-            ReportOnUpdateSummary(webApplicationResult.Summary);
+            using (var webApplicationUpStack = await PrepareWebApplicationStackAsync(infrastructureStack, true))
+            {
+                var webApplicationResult = await webApplicationUpStack.UpAsync(new UpOptions { OnStandardError = Console.Error.WriteLine, OnStandardOutput = Console.WriteLine });
+                ReportOnUpdateSummary(webApplicationResult.Summary);
+            }
 
             // TODO: Do we need to wait until all of our instances are actually up and ready before we can set the load balancer back?
 
@@ -130,7 +134,7 @@ namespace Experiment1
             Console.WriteLine($"InService => {loadBalancerOutputs.InService}");
         }
 
-        private static async Task<WorkspaceStack> PrepareWebApplicationStackAsync(WorkspaceStack infrastructureStack)
+        private static async Task<WorkspaceStack> PrepareWebApplicationStackAsync(WorkspaceStack infrastructureStack, bool inService)
         {
             var outputs = await infrastructureStack.GetOutputsAsync();
             var infrastructureOutputs = new InfrastructureOutputs(outputs);
@@ -140,7 +144,8 @@ namespace Experiment1
                 infrastructureOutputs.Subnet1aId,
                 infrastructureOutputs.Subnet1bId,
                 infrastructureOutputs.LoadBalancerId,
-                infrastructureOutputs.LoadBalancerTargetGroupArn
+                infrastructureOutputs.LoadBalancerTargetGroupArn,
+                inService
                 );
 
             return webApplicationStack;

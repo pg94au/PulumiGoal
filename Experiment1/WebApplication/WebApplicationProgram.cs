@@ -7,7 +7,7 @@ namespace Experiment1.WebApplication
 {
     public class WebApplicationProgram
     {
-        public static PulumiFn Create(string fooVpcId, string fooSubnet1aId, string fooSubnet1bId, string fooSgLoadBalancerId, string fooLbTargetGroupArn)
+        public static PulumiFn Create(string fooVpcId, string fooSubnet1aId, string fooSubnet1bId, string fooSgLoadBalancerId, string fooLbTargetGroupArn, bool inService)
         {
             var program = PulumiFn.Create(() =>
             {
@@ -89,12 +89,13 @@ namespace Experiment1.WebApplication
                     
                 });
 
+                // Note, the scaling group here has a capacity based on whether we wish to be "in service" or not.
                 var fooAutoscalingGroup = new Group("FooAutoScalingGroupWebServer", new GroupArgs
                 {
                     Name = "FooAutoScalingGroupWebServer",
-                    DesiredCapacity = 2,
-                    MaxSize = 2,
-                    MinSize = 2,
+                    DesiredCapacity = inService ? 2 : 0,
+                    MaxSize = inService ? 2 : 0,
+                    MinSize = inService ? 2 : 0,
                     LaunchTemplate = new Pulumi.Aws.AutoScaling.Inputs.GroupLaunchTemplateArgs
                     {
                         Id = fooLaunchTemplate.Id,
