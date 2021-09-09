@@ -2,7 +2,7 @@
 Playing with Pulumi to learn something about it.
 
 
-##Experiment1
+## Experiment1
 To show that infrastructure can be divided such that it doesn't all need to be affected by every change.  The goal here is to deploy a web application behind a load balancer, then divert the load balancer to an "out of service" state, update the web application (replace it), and finally set the load balancer back to serving up our new application.
 
 pulumi install plugin  (to ensure that pulumi plugins are installed)
