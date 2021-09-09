@@ -14,7 +14,7 @@ namespace Experiment1.LoadBalancer
                 new InlineProgramArgs("Experiment1", "experiment1-loadBalancer", program2)
             );
 
-            await stack.Workspace.InstallPluginAsync("aws", "v4.15.0");
+            await stack.Workspace.InstallPluginAsync("aws", "v4.19.0");
             await stack.SetConfigAsync("aws:region", new ConfigValue("ca-central-1"));
             await stack.RefreshAsync(new RefreshOptions { OnStandardOutput = Console.WriteLine });
 

@@ -5,7 +5,6 @@ using Experiment1.Infrastructure;
 using Experiment1.LoadBalancer;
 using Experiment1.WebApplication;
 using Pulumi.Automation;
-using Pulumi.Aws.Lex.Outputs;
 
 namespace Experiment1
 {

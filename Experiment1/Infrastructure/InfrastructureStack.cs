@@ -14,7 +14,7 @@ namespace Experiment1.Infrastructure
                 new InlineProgramArgs("Experiment1", "experiment1-infrastructure", program)
             );
 
-            await stack.Workspace.InstallPluginAsync("aws", "v4.15.0");
+            await stack.Workspace.InstallPluginAsync("aws", "v4.19.0");
             await stack.SetConfigAsync("aws:region", new ConfigValue("ca-central-1"));
             await stack.RefreshAsync(new RefreshOptions { OnStandardOutput = Console.WriteLine });
 
